@@ -61,7 +61,7 @@ public class SecurityService implements ReactiveUserDetailsService {
 		                System.out.println("Fetched user: " + userDto);
 		                return (UserDetails) User.builder()
 		                    .username(String.valueOf(userDto.getUserId()))
-		                    .password("{noop}" + userDto.getPassword())
+		                    .password("{bcrypt}" + userDto.getPassword())
 		                    .build();
 		            } catch (Exception e) {
 		                System.err.println("Error mapping UserResponseDTO to UserDetails: " + e.getMessage());

@@ -1,13 +1,11 @@
 package com.api_gateway.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -16,8 +14,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
-	@Autowired
-	private ReactiveUserDetailsService reactiveUserDetailsService;
+//	@Autowired
+//	private ReactiveUserDetailsService reactiveUserDetailsService;
 
 	@Bean
 	@LoadBalanced
@@ -30,7 +28,7 @@ public class SecurityConfig {
 	    return http
 	        .csrf(csrf -> csrf.disable())
 	        .authorizeExchange(auth -> auth
-	            .pathMatchers("/auth/**").permitAll()
+	            .pathMatchers("api/users/login","api/users/register").permitAll()
 	            .anyExchange().authenticated()
 	        )
 	        .httpBasic(Customizer.withDefaults())
