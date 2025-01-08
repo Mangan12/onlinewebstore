@@ -33,7 +33,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	@Query("UPDATE User u SET u.status = 'Inactive' WHERE u.userId = :userId")
 	void deactivateStatus(@Param("userId") long userId);
 
-	User findByEmail(String email);
+	Optional<User> findByEmail(String email);
 
 
 }

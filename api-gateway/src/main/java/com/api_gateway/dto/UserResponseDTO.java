@@ -20,45 +20,45 @@ import lombok.Setter;
 public class UserResponseDTO {
 
 	private long userId;
-	
+
 	@NotBlank(message = "First name cannot be blank")
-    @Size(max = 50, message = "First name cannot exceed 50 characters")
-    private String firstName;
+	@Size(max = 50, message = "First name cannot exceed 50 characters")
+	private String firstName;
 
-    private String middleName;
+	private String middleName;
 
-    @Size(max = 50, message = "Last name cannot exceed 50 characters")
-    private String lastName;
+	@Size(max = 50, message = "Last name cannot exceed 50 characters")
+	private String lastName;
 
-    @Email(message = "Invalid email format")
-    @NotBlank(message = "Email cannot be blank")
-    private String email;
+	@Email(message = "Invalid email format")
+	@NotBlank(message = "Email cannot be blank")
+	private String email;
 
-    @NotBlank(message = "Password cannot be blank")
-    @Size(min = 8, message = "Password must be at least 8 characters long")
-    private String password;
+	@NotBlank(message = "Password cannot be blank")
+	@Size(min = 8, message = "Password must be at least 8 characters long")
+	private String password;
 
-    @Pattern(regexp = "\\d{10}", message = "Phone number must be 10 digits")
-    @NotBlank(message = "Phone number cannot be blank")
-    private String phoneNumber;
+	@Pattern(regexp = "\\d{10}", message = "Phone number must be 10 digits")
+	@NotBlank(message = "Phone number cannot be blank")
+	private String phoneNumber;
 
-    private String address;
+	private String address;
 
-    private String city;
+	private String city;
 
-    private String state;
+	private String state;
 
-    private int pincode;
+	private int pincode;
 
-    @NotBlank(message = "Role cannot be blank")
-    private String role;
+	@NotBlank(message = "Role cannot be blank")
+	private String role;
 
-    private String status;
+	private String status;
 
-    private boolean accountLocked;
+	private boolean accountLocked;
 
-    private int failedAttempts;
+	private int failedAttempts;
 
-    private boolean emailVerified;
+	private boolean emailVerified;
 
 }

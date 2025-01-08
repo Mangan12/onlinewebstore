@@ -15,61 +15,41 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class SecurityService implements ReactiveUserDetailsService {
-	
+
 	@Autowired
 	private WebClient.Builder webClientBuilder;
 
 	@Override
 	public Mono<UserDetails> findByUsername(String username) {
-		long userId;
-		try {
-	        userId = Long.parseLong(username);
-	        System.out.println("Parsed userId: " + userId);
-	    } catch (NumberFormatException e) {
-	        System.err.println("Failed to parse userId: " + e.getMessage());
-	        return Mono.error(new UsernameNotFoundException("Invalid userId format: " + username, e));
-	    }
-		Mono<UserDetails> m = webClientBuilder.build()
-		        .get()
-		        .uri("http://user-service/api/users/id", uriBuilder -> {
-		            try {
-		                return uriBuilder.queryParam("userId", userId).build();
-		            } catch (Exception e) {
-		                System.err.println("Error building URI: " + e.getMessage());
-		                throw e;
-		            }
-		        })
-		        .retrieve()
-		        .onStatus(
-		            status -> !status.is2xxSuccessful(),
-		            response -> {
-		                System.err.println("Error response from server: " + response.statusCode());
-		                return Mono.error(new RuntimeException("Unexpected response status: " + response.statusCode()));
-		            }
-		        )
-		        .bodyToMono(UserResponseDTO.class)
-		        .doOnError(e -> {
-		            System.err.println("Error during WebClient call: " + e.getMessage());
-		            e.printStackTrace();
-		        })
-		        .onErrorResume(WebClientResponseException.NotFound.class, error -> {
-		            System.err.println("User not found: " + error.getMessage());
-		            return Mono.error(new UsernameNotFoundException("User not found with id: " + userId, error));
-		        })
-		        .map(userDto -> {
-		            try {
-		                System.out.println("Fetched user: " + userDto);
-		                return (UserDetails) User.builder()
-		                    .username(String.valueOf(userDto.getUserId()))
-		                    .password("{bcrypt}" + userDto.getPassword())
-		                    .build();
-		            } catch (Exception e) {
-		                System.err.println("Error mapping UserResponseDTO to UserDetails: " + e.getMessage());
-		                throw new RuntimeException("Mapping error", e);
-		            }
-		        })
-		        .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found")));
-	    return m;
+
+		Mono<UserDetails> m = webClientBuilder.build().get()
+				.uri("http://user-service/api/users/by-mail", uriBuilder -> {
+					try {
+						return uriBuilder.queryParam("email", username).build();
+					} catch (Exception e) {
+						System.err.println("Error building URI: " + e.getMessage());
+						throw e;
+					}
+				}).retrieve().onStatus(status -> !status.is2xxSuccessful(), response -> {
+					System.err.println("Error response from server: " + response.statusCode());
+					return Mono.error(new RuntimeException("Unexpected response status: " + response.statusCode()));
+				}).bodyToMono(UserResponseDTO.class).doOnError(e -> {
+					System.err.println("Error during WebClient call: " + e.getMessage());
+					e.printStackTrace();
+				}).onErrorResume(WebClientResponseException.NotFound.class, error -> {
+					System.err.println("User not found: " + error.getMessage());
+					return Mono.error(new UsernameNotFoundException("User not found with id: " + username, error));
+				}).map(userDto -> {
+					try {
+						System.out.println("Fetched user: " + userDto);
+						return (UserDetails) User.builder().username(String.valueOf(userDto.getUserId()))
+								.password("{bcrypt}" + userDto.getPassword()).build();
+					} catch (Exception e) {
+						System.err.println("Error mapping UserResponseDTO to UserDetails: " + e.getMessage());
+						throw new RuntimeException("Mapping error", e);
+					}
+				}).switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found")));
+		return m;
 	}
 
 }

@@ -22,6 +22,8 @@ public interface UserService {
 
 	void deactivateUser(long userId);
 
-	boolean authenticateUser(@Valid UserLoginDTO userLoginDTO);
+	String authenticateUser(@Valid UserLoginDTO userLoginDTO);
+
+	Optional<UserResponseDTO> getUserByEmail(String email);
 
 }

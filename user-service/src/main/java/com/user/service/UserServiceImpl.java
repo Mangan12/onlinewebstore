@@ -32,9 +32,11 @@ public class UserServiceImpl implements UserService {
 
 	private final UserRepository userRepo;
 	private final ModelMapper modelMapper;
-
+	
 	@Autowired
-	@Lazy
+    private JWTService jwtService;
+	
+	@Autowired
 	private AuthenticationManager authenticationManager;
 
 	@Autowired
@@ -46,7 +48,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public boolean authenticateUser(@Valid UserLoginDTO userLoginDTO) {
+	public String authenticateUser(@Valid UserLoginDTO userLoginDTO) {
 	    try {
 	    	System.out.println(userLoginDTO.toString());
 	        // Attempt to authenticate the user
@@ -57,10 +59,10 @@ public class UserServiceImpl implements UserService {
 	        // Check if authentication was successful
 	        if (auth.isAuthenticated()) {
 	            System.out.println("Authentication successful for user: " + userLoginDTO.getEmail());
-	            return true;
+	            return jwtService.generateToken(userLoginDTO.getEmail());
 	        } else {
 	            System.err.println("Authentication failed for user: " + userLoginDTO.getEmail());
-	            return false;
+	            return "failed";
 	        }
 	    } catch (BadCredentialsException e) {
 	        // Handle invalid credentials
@@ -103,8 +105,8 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Optional<UserResponseDTO> getUserById(long userId) {
 		// TODO Auto-generated method stub
-		Optional<User> OptionalUser = userRepo.findById(userId);
-		return OptionalUser.map(user -> modelMapper.map(OptionalUser, UserResponseDTO.class));
+		Optional<User> optionalUser = userRepo.findById(userId);
+		return optionalUser.map(user -> modelMapper.map(user, UserResponseDTO.class));
 	}
 
 	@Override
@@ -128,6 +130,13 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public void deactivateUser(long userId) {
 		userRepo.deactivateStatus(userId);
+	}
+
+	@Override
+	public Optional<UserResponseDTO> getUserByEmail(String email) {
+		// TODO Auto-generated method stub
+		Optional<User> opUser= userRepo.findByEmail(email);
+		return opUser.map(user -> modelMapper.map(user, UserResponseDTO.class));
 	}
 
 }

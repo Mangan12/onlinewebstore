@@ -1,16 +1,21 @@
 package com.user.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -21,9 +26,10 @@ import com.user.dto.UserLoginDTO;
 import com.user.dto.UserRegisterDTO;
 import com.user.dto.UserResponseDTO;
 import com.user.exception.UserNotFoundException;
+import com.user.service.JWTService;
 import com.user.service.UserService;
 
-import jakarta.servlet.http.HttpServletRequest;
+import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 
 @RestController
@@ -31,18 +37,29 @@ import jakarta.validation.Valid;
 public class UserController {
 
 	private final UserService userService;
+	private final JWTService jwtService;
 
-	public UserController(UserService userService) {
+	public UserController(UserService userService, JWTService jwtService) {
 		this.userService = userService;
+		this.jwtService = jwtService;
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<String> userLogin(@RequestBody @Valid UserLoginDTO userLoginDTO) {
-		boolean isAuthenticated = userService.authenticateUser(userLoginDTO);
-		if (isAuthenticated) {
-			return ResponseEntity.ok("Login Successful!");
-		} else {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password!");
+	public ResponseEntity<?> userLogin(@RequestBody @Valid UserLoginDTO userLoginDTO) {
+		try {
+			// Attempt to authenticate the user
+			String key = userService.authenticateUser(userLoginDTO);
+
+			// If successful, return the key
+			return ResponseEntity.ok().body(Map.of("message", "Login successful!", "key", key));
+		} catch (AuthenticationException e) {
+			// Handle authentication failures
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body(Map.of("message", "Invalid email or password!", "error", e.getMessage()));
+		} catch (Exception e) {
+			// Handle any unexpected errors
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(Map.of("message", "An unexpected error occurred during login.", "error", e.getMessage()));
 		}
 	}
 
@@ -54,10 +71,10 @@ public class UserController {
 	}
 
 	// Fetch a user by ID
-	@GetMapping("/{userId}")
-	public ResponseEntity<Optional<UserResponseDTO>> getUser(@PathVariable long userId) {
+	@GetMapping("/by-mail")
+	public ResponseEntity<Optional<UserResponseDTO>> getUser(@RequestParam String email) {
 		try {
-			Optional<UserResponseDTO> userResponseDTO = userService.getUserById(userId);
+			Optional<UserResponseDTO> userResponseDTO = userService.getUserByEmail(email);
 			return ResponseEntity.ok(userResponseDTO); // Return 200 OK with the user data
 		} catch (UserNotFoundException ex) {
 			// Return 404 if the user does not exist
@@ -123,6 +140,36 @@ public class UserController {
 			throw new IllegalArgumentException("Invalid User ID: " + userId);
 		} catch (Exception e) {
 			throw new RuntimeException("An unexpected error occurred while deactivating the user.");
+		}
+	}
+
+	@GetMapping("/validate-token")
+	public ResponseEntity<Map<String, Object>> validateToken(
+			@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) {
+
+		try {
+			Map<String, Object> response = new HashMap<>();
+			// Validate header format
+			if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
+				response.put("valid", false);
+				response.put("error", "Authorization header is missing or improperly formatted.");
+				return ResponseEntity.ok(response);
+			}
+
+			// Remove "Bearer " prefix
+			String token = bearerToken.substring(7);
+			System.out.println("Extracted Token: " + token);
+			Claims claims = jwtService.validateToken(token);
+			response.put("valid", true);
+			response.put("username", claims.getSubject());
+			response.put("roles", claims.get("roles", List.class));
+			response.put("claims", claims);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			Map<String, Object> response = new HashMap<>();
+			response.put("valid", false);
+			response.put("error", e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
 		}
 	}
 
