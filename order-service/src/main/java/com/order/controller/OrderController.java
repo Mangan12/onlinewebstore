@@ -1,6 +1,7 @@
 package com.order.controller;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,9 +25,9 @@ public class OrderController {
 	
 	@PostMapping("/placeorder")
 	@ResponseStatus(HttpStatus.CREATED)
-	public String placeOrder(@RequestBody OrderRequest orderRequest) {
+	public CompletableFuture<String> placeOrder(@RequestBody OrderRequest orderRequest) {
 		orderService.placeOrder(orderRequest);
-		return "Order Placed Successfully";
+		return orderService.placeOrder(orderRequest);
 	}
 	
 	@GetMapping("/getallorders")

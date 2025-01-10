@@ -3,6 +3,7 @@ package com.order.service;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,10 @@ import com.order.entity.Order;
 import com.order.entity.OrderLineItems;
 import com.order.repository.OrderRepo;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
@@ -32,7 +37,10 @@ public class OrderServiceImpl implements OrderService {
 	private WebClient.Builder webClientBuilder;
 
 	@Override
-	public void placeOrder(OrderRequest orderRequest) {
+	@CircuitBreaker(name = "inventory", fallbackMethod = "fallBackMethod")
+//	@TimeLimiter(name="inventory", fallbackMethod = "fallbackMethodForTimeOut")
+//	@Retry(name="inventory", fallbackMethod = "fallBackMethodRetry")
+	public CompletableFuture<String> placeOrder(OrderRequest orderRequest) {
 		Order order = new Order();
 		order.setOrderNumber(UUID.randomUUID().toString());
 		List<OrderLineItems> orderLineItems = orderRequest.getOrderLineItemsDto().stream()
@@ -44,15 +52,26 @@ public class OrderServiceImpl implements OrderService {
 				.uri("http://inventory-service/api/inventory/checkstock",
 						uriBuilder -> uriBuilder.queryParam("skuCode", skuCode).build())
 				.retrieve().bodyToMono(InventoryResponse[].class).block();
-		
-		
+
 		boolean res = Arrays.stream(inventoryResponses)
 				.allMatch(inventoryResponse -> (inventoryResponse.getQuantity() > 0));
-		
-		if (res)
+
+		if (res) {
 			orderRepo.save(order);
+			return CompletableFuture.supplyAsync(() -> "Order Placed Successfully");
+		}
 		else
 			throw new IllegalArgumentException("Product is not in stock!!");
+	}
+
+	public String fallbackMethod(OrderRequest orderRequest, Exception  t) {
+		return "OOPS Something went wrong....Please try later!!";
+	}
+	public CompletableFuture<String> fallbackMethodForTimeOut(OrderRequest orderRequest, Exception  t) {
+		 return CompletableFuture.supplyAsync(() -> "Fallback response due to timeout");
+	}
+	public String fallBackMethodRetry(OrderRequest orderRequest, Exception  t) {
+		return "OOPS Something went wrong....Please try later!!";
 	}
 
 	@Override
