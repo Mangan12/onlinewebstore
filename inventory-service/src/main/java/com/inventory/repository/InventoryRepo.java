@@ -10,5 +10,5 @@ import org.springframework.data.repository.query.Param;
 import com.inventory.entity.Inventory;
 
 public interface InventoryRepo extends JpaRepository<Inventory, Long>{
-	@Query("SELECT i FROM Inventory i WHERE i.skuCode in :skuCodes")
+	@Query("SELECT DISTINCT(i) FROM Inventory i WHERE i.skuCode in :skuCodes")
 	List<Inventory> findBySkuCode(@Param("skuCodes") List<String> skuCodes);}

@@ -1,6 +1,9 @@
 package com.order.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -27,4 +30,6 @@ public class Order {
 	private String orderNumber;
 	@OneToMany(cascade = CascadeType.ALL)
 	private List<OrderLineItems> orderLineItems;
+	@CreationTimestamp
+	private LocalDateTime createdAt;
 }

@@ -22,9 +22,10 @@ public class InventoryServiceImpl implements InventoryService {
 	
 	@Override
 	@Transactional(readOnly = true)
-	public List<InventoryResponse> isPresent(List<String> skuCodes) {
+	public List<InventoryResponse> getStockDetails(List<String> skuCodes) {
 		// TODO Auto-generated method stub
 		List<Inventory> items = inventoryRepo.findBySkuCode(skuCodes);
+		System.out.println(items);
 		List<InventoryResponse> inventoryDTO = items.stream().map(item-> modelMapper.map(item, InventoryResponse.class)).toList();
 		return inventoryDTO;
 	}
