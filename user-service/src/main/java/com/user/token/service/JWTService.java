@@ -1,4 +1,4 @@
-package com.user.service;
+package com.user.token.service;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -10,8 +10,6 @@ import java.util.function.Function;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
@@ -24,14 +22,16 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JWTService {
 
-	String secretKey;
+	// secret key for token generation and token validation
+	private static String secretKey;
 
 	public JWTService() throws NoSuchAlgorithmException {
 		KeyGenerator kgen = KeyGenerator.getInstance("HmacSHA256");
 		SecretKey sk = kgen.generateKey();
 		secretKey = Base64.getEncoder().encodeToString(sk.getEncoded());
 	}
-
+	
+	// token generation process
 	public String generateToken(String username) {
 
 		// create map<string and object> of claims
@@ -49,10 +49,15 @@ public class JWTService {
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
 
+    // token validation process
+	// check expiry of the token 
+	private Boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+	
 	public Claims validateToken(String token) {
 		try {
 			final String username = extractUsername(token);
-			System.out.println("hiii" + username);
 
 			Claims claims = Jwts.parser().verifyWith(getKey()).build().parseSignedClaims(token).getPayload();
 
@@ -69,6 +74,10 @@ public class JWTService {
 		// TODO Auto-generated method stub
 		return extractClaim(token, Claims::getSubject);
 	}
+	
+	private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
 
 	private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
 		final Claims claims = extractAllClaims(token);

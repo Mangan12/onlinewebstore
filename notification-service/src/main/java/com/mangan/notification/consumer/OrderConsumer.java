@@ -3,6 +3,7 @@ package com.mangan.notification.consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 import com.mangan.notification.dto.OrderPlacedEvent;
@@ -13,7 +14,7 @@ public class OrderConsumer {
     private static final Logger logger = LoggerFactory.getLogger(OrderConsumer.class);
 
     @KafkaListener(topics = "order-topic", groupId = "order_group", containerFactory = "containerFactory")
-    public void handleNotification(OrderPlacedEvent orderPlacedEvent) {
+    public void handleNotification(@Payload OrderPlacedEvent orderPlacedEvent) {
         try {
             // Log the received event
             logger.info("Received OrderPlacedEvent: {}", orderPlacedEvent);

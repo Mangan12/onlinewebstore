@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,12 +15,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.user.dto.JwtResponseDTO;
 import com.user.dto.UserDTO;
 import com.user.dto.UserLoginDTO;
 import com.user.dto.UserRegisterDTO;
 import com.user.dto.UserResponseDTO;
 import com.user.entity.User;
 import com.user.repository.UserRepository;
+import com.user.token.RefreshToken;
+import com.user.token.service.JWTService;
+import com.user.token.service.RefreshTokenService;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -41,6 +44,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private BCryptPasswordEncoder passwordEncoder;
+	
+	@Autowired
+	private RefreshTokenService refreshTokenService;
 
 	public UserServiceImpl(UserRepository userRepo, ModelMapper modelMapper) {
 		this.userRepo = userRepo;
@@ -48,7 +54,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public String authenticateUser(@Valid UserLoginDTO userLoginDTO) {
+	public JwtResponseDTO authenticateUser(@Valid UserLoginDTO userLoginDTO) {
 	    try {
 	    	System.out.println(userLoginDTO.toString());
 	        // Attempt to authenticate the user
@@ -59,10 +65,14 @@ public class UserServiceImpl implements UserService {
 	        // Check if authentication was successful
 	        if (auth.isAuthenticated()) {
 	            System.out.println("Authentication successful for user: " + userLoginDTO.getEmail());
-	            return jwtService.generateToken(userLoginDTO.getEmail());
+	            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userLoginDTO.getEmail());	            
+	            return JwtResponseDTO.builder()
+	                    .accessToken(jwtService.generateToken(userLoginDTO.getEmail()))
+	                    .token(refreshToken.getToken())
+	                    .build();
 	        } else {
 	            System.err.println("Authentication failed for user: " + userLoginDTO.getEmail());
-	            return "failed";
+	            throw new RuntimeException("Authentication failed for user: " + userLoginDTO.getEmail());
 	        }
 	    } catch (BadCredentialsException e) {
 	        // Handle invalid credentials

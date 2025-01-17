@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,13 +23,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.user.dto.JwtResponseDTO;
+import com.user.dto.RefreshTokenRequestDTO;
 import com.user.dto.UserDTO;
 import com.user.dto.UserLoginDTO;
 import com.user.dto.UserRegisterDTO;
 import com.user.dto.UserResponseDTO;
 import com.user.exception.UserNotFoundException;
-import com.user.service.JWTService;
 import com.user.service.UserService;
+import com.user.token.service.JWTService;
+import com.user.token.service.RefreshTokenService;
 
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
@@ -38,6 +43,9 @@ public class UserController {
 
 	private final UserService userService;
 	private final JWTService jwtService;
+	
+	@Autowired
+	private RefreshTokenService refreshTokenService;
 
 	public UserController(UserService userService, JWTService jwtService) {
 		this.userService = userService;
@@ -48,10 +56,10 @@ public class UserController {
 	public ResponseEntity<?> userLogin(@RequestBody @Valid UserLoginDTO userLoginDTO) {
 		try {
 			// Attempt to authenticate the user
-			String key = userService.authenticateUser(userLoginDTO);
+			JwtResponseDTO keys = userService.authenticateUser(userLoginDTO);
 
 			// If successful, return the key
-			return ResponseEntity.ok().body(Map.of("message", "Login successful!", "key", key));
+			return ResponseEntity.ok().body(Map.of("message", "Login successful!", "keys", keys));
 		} catch (AuthenticationException e) {
 			// Handle authentication failures
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -173,4 +181,23 @@ public class UserController {
 		}
 	}
 
+	@PostMapping("/refresh")
+	public ResponseEntity<JwtResponseDTO> getNewTokens(@RequestBody RefreshTokenRequestDTO refreshToken) {
+		try {
+			System.out.println("hi" + refreshToken);
+			JwtResponseDTO tokenResponse = refreshTokenService.getNewTokens(refreshToken);
+			return ResponseEntity.ok(tokenResponse); // Return 200 OK with the user data
+		} catch (UserNotFoundException ex) {
+			// Return 404 if the user does not exist
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+		} catch (Exception ex) {
+			// Return 500 Internal Server Error for unexpected issues
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+		}
+	}
+	
+	@PatchMapping
+	public void update(@RequestBody RefreshTokenRequestDTO refreshToken) {
+		refreshTokenService.updateById(refreshToken);
+	}
 }
