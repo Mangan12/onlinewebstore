@@ -91,7 +91,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 		log.info("Successfully processed refresh token request for email: {}", email);
 
 		// Return the new access token and refresh token in the response
-		return JwtResponseDTO.builder().accessToken(newAccessToken).token(newToken.get().getToken()).build();
+		return JwtResponseDTO.builder().accessToken(newAccessToken).refreshToken(newToken.get().getToken()).build();
 	}
 
 	public void updateById(RefreshTokenRequestDTO refreshTokenRequestDTO) {

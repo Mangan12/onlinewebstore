@@ -29,7 +29,7 @@ public class SecurityConfig {
 	@Bean
 	public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
 		return http.csrf(csrf -> csrf.disable())
-				.authorizeExchange(auth -> auth.pathMatchers("api/users/login", "api/users/register","/eureka/**").permitAll()
+				.authorizeExchange(auth -> auth.pathMatchers("api/users/login", "api/users/register","/eureka/**","api/users/refresh").permitAll()
 						.anyExchange().authenticated())
 				.addFilterAt(jwtWebFilter, SecurityWebFiltersOrder.AUTHENTICATION).httpBasic(Customizer.withDefaults())
 				.formLogin(Customizer.withDefaults()).build();

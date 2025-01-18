@@ -1,4 +1,4 @@
-package com.user.dto;
+package com.api_gateway.dto;
 
 import lombok.Builder;
 

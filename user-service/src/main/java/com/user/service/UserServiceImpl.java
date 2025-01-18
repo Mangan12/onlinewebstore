@@ -68,7 +68,7 @@ public class UserServiceImpl implements UserService {
 	            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userLoginDTO.getEmail());	            
 	            return JwtResponseDTO.builder()
 	                    .accessToken(jwtService.generateToken(userLoginDTO.getEmail()))
-	                    .token(refreshToken.getToken())
+	                    .refreshToken(refreshToken.getToken())
 	                    .build();
 	        } else {
 	            System.err.println("Authentication failed for user: " + userLoginDTO.getEmail());
