@@ -1,1 +1,10 @@
 /.metadata/
+/kafka-data/
+/mongo-data/
+/mysql-order-data/
+/mysql-user-data/
+/postgres-inventory/
+/zookeeper-data/
+/zookeeper-logs/
+/docker-compose.yml
+/*/.dockerignore

@@ -48,7 +48,7 @@ public class SecurityService implements ReactiveUserDetailsService {
 						System.err.println("Error mapping UserResponseDTO to UserDetails: " + e.getMessage());
 						throw new RuntimeException("Mapping error", e);
 					}
-				}).switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found")));
+				}).switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found!")));
 		return m;
 	}
 
