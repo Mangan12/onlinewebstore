@@ -176,7 +176,7 @@ services:
   ## Order-Service Docker Compose Config
   order-service:
     container_name: orderservice
-    image: mangancharan/orderservice:0.0.1
+    image: mangancharan/orderservice:0.0.2
     environment:
        - SPRING_PROFILES_ACTIVE=docker
        - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-order:3306/orderservice?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false
@@ -207,7 +207,7 @@ services:
   ## Notification-Service Docker Compose Config
   notification-service:
     container_name: notificationservice
-    image: mangancharan/notificationservice:0.0.1
+    image: mangancharan/notificationservice:0.0.2
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     networks:

@@ -26,7 +26,6 @@ public class OrderController {
 	@PostMapping("/placeorder")
 	@ResponseStatus(HttpStatus.CREATED)
 	public CompletableFuture<String> placeOrder(@RequestBody OrderRequest orderRequest) {
-		orderService.placeOrder(orderRequest);
 		return orderService.placeOrder(orderRequest);
 	}
 	
